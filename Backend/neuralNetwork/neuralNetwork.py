@@ -77,13 +77,7 @@ def main():
 
 
     # train the neural network
-    history = model.fit(
-        xText, 
-        ySentiment, 
-        epochs=5, 
-        batch_size=30, 
-        validation_split=0.2
-    )
+    history = model.fit(xText, ySentiment, epochs=5, batch_size=30, validation_split=0.2)
 
     # ticker and sentiment variables
     def predict_financial_insight(raw_sentence):
