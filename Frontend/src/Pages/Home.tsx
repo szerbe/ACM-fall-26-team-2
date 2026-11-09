@@ -1,43 +1,27 @@
-import {useNavigate} from 'react-router';
+import Searchbar from "../components/Searchbar";
+import Stockcard from "../components/Stockcard";
+import { FEATURED_STOCKS } from "../utils/Watchlist";
 
-
-const stocks = [
-  { ticker: "AAPL", name: "Apple Inc." },
-  { ticker: "MSFT", name: "Microsoft Corporation" },
-  { ticker: "NVDA", name: "NVIDIA Corporation" },
-  { ticker: "GOOGL", name: "Alphabet Inc." },
-];
-
-function Home() { 
-    const navigate = useNavigate();
-    
-    return (
-        <main className="home">
+function Home() {
+  return (
+    <main className="page">
       <section className="hero">
         <h1>Stock Sentiment Analyzer</h1>
-        <p>
-          Explore stocks, analyze market sentiment, and view AI projections.
-        </p>
+        <p>Look up stock prices, market sentiment, and AI projections.</p>
+        <Searchbar />
       </section>
 
-      <section className="stock-list">
-        <h2>Explore Stocks</h2>
-
-        <div className="stock-grid">
-          {stocks.map((stock) => (
-            <button
-              className="stock-card"
-              key={stock.ticker}
-              onClick={() => navigate(`/stock/${stock.ticker}`)}
-            >
-              <h3>{stock.ticker}</h3>
-              <p>{stock.name}</p>
-              <span>View analysis →</span>
-            </button>
-          ))}
+      <section className="stock-section" aria-labelledby="explore-stocks">
+        <div className="section-heading">
+          <h2 id="explore-stocks">Explore stocks</h2>
+          <p>Start with a featured company.</p>
         </div>
+        <ul className="stock-list">
+          {FEATURED_STOCKS.map((stock) => <Stockcard key={stock.ticker} {...stock} />)}
+        </ul>
       </section>
     </main>
   );
 }
+
 export default Home;

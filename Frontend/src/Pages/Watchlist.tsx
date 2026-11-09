@@ -1,10 +1,9 @@
-
-import { useNavigate } from "react-router";
-import { getWatchlist, saveWatchlist, STOCKS } from "../utils/Watchlist";
 import { useState } from "react";
+import { Link } from "react-router";
+import Stockcard from "../components/Stockcard";
+import { getWatchlist, saveWatchlist, STOCKS } from "../utils/Watchlist";
 
 function Watchlist() {
-  const navigate = useNavigate();
   const [pinned, setPinned] = useState(() => getWatchlist());
 
   function removeStock(ticker: string) {
@@ -13,34 +12,29 @@ function Watchlist() {
     setPinned(updated);
   }
 
-  const savedStocks = pinned.map((ticker) => ({
-    ticker,
-    name: STOCKS.find((stock) => stock.ticker === ticker)?.name ?? ticker,
-  }));
-
   return (
-    <main className="home">
-      <h1>Pinned Stocks</h1>
+    <main className="page">
+      <div className="page-heading">
+        <h1>Saved stocks</h1>
+        <p>Revisit the stocks you’ve pinned.</p>
+      </div>
 
-      {savedStocks.length === 0 ? (
-        <p>You haven't pinned any stocks yet.</p>
-      ) : (
-        <div className="stock-grid">
-          {savedStocks.map((stock) => (
-            <div className="stock-card" key={stock.ticker}>
-              <h3>{stock.ticker}</h3>
-              <p>{stock.name}</p>
-
-              <button onClick={() => navigate(`/stock/${stock.ticker}`)}>
-                View Analysis
-              </button>
-
-              <button onClick={() => removeStock(stock.ticker)}>
-                Remove
-              </button>
-            </div>
-          ))}
+      {pinned.length === 0 ? (
+        <div className="empty-state">
+          <p>You haven’t pinned any stocks yet.</p>
+          <Link className="button button-primary" to="/">Explore stocks</Link>
         </div>
+      ) : (
+        <ul className="stock-list">
+          {pinned.map((ticker) => (
+            <Stockcard
+              key={ticker}
+              ticker={ticker}
+              name={STOCKS.find((stock) => stock.ticker === ticker)?.name}
+              onRemove={() => removeStock(ticker)}
+            />
+          ))}
+        </ul>
       )}
     </main>
   );

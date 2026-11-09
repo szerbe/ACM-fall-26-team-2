@@ -1,8 +1,14 @@
-export const STOCKS = [
+export const FEATURED_STOCKS = [
   { ticker: "AAPL", name: "Apple Inc." },
-  { ticker: "GOOGL", name: "Alphabet Inc." },  
   { ticker: "MSFT", name: "Microsoft Corporation" },
-{ ticker: "AMZN", name: "Amazon.com, Inc." },]
+  { ticker: "NVDA", name: "NVIDIA Corporation" },
+  { ticker: "GOOGL", name: "Alphabet Inc." },
+];
+
+export const STOCKS = [
+  ...FEATURED_STOCKS,
+  { ticker: "AMZN", name: "Amazon.com, Inc." },
+];
 
 const STORAGE_KEY = "watchlist";
 
