@@ -1,7 +1,7 @@
 # Stock API
 
 A Flask API for the React frontend. All backend integration points live in
-`app.py`: implement `get_stock_price`, `get_market_sentiment`, and
+`flaskapi.py`: implement `get_stock_price`, `get_market_sentiment`, and
 `get_ai_projection` as your data sources become available. Each receives an
 uppercase ticker. The starter functions return `None`; no sample prices or AI
 predictions are generated.
@@ -15,13 +15,13 @@ cd Backend
 python3 -m venv venv
 source venv/bin/activate
 python -m pip install -r requirements.txt
-python app.py
+python flaskapi.py
 ```
 
 The API runs at `http://127.0.0.1:5000`. For development with automatic reload:
 
 ```sh
-python -m flask --app app run --debug
+python -m flask --app flaskapi run --debug
 ```
 
 ## Endpoints
@@ -59,31 +59,41 @@ with the appropriate HTTP status.
 Keep future credentials in environment variables. Set timeouts on any outgoing
 HTTP or AI requests inside your provider functions.
 
-## Call from React
+## Run the frontend
 
-```ts
-type StockAnalysis = {
-  ticker: string;
-  stock_price: number | null;
-  market_sentiment: string | null;
-  ai_projection: string | null;
-  errors: Partial<Record<"stock_price" | "market_sentiment" | "ai_projection", string>>;
-};
+Leave Flask running. In a second terminal, open `Frontend` and run:
 
-const response = await fetch(
-  `http://127.0.0.1:5000/api/stocks/${encodeURIComponent(ticker)}`,
-);
-if (!response.ok) throw new Error(`Stock request failed (${response.status})`);
-const analysis: StockAnalysis = await response.json();
-// Use analysis.stock_price ?? "Not available yet" (and likewise for other fields).
+```sh
+npm ci
+npm run dev
 ```
 
-Browser requests from `http://localhost:5173` and `http://127.0.0.1:5173` are
-allowed by default. Set `ALLOWED_ORIGINS` to a comma-separated list to change
-this. Set `PORT` to change the port used by `python app.py`. Export variables in
-your shell before starting the server; `app.py` does not load `.env` files.
+Vite forwards `/api` requests to Flask on port 5000 during development and
+preview. The stock analysis page reads all three fields, with separate messages
+for missing data and provider errors. It displays prices in the quote currency
+without a currency symbol because the API does not supply a currency code.
 
-For deployment, use a WSGI server pointed at `app:app` or `app:create_app()`.
+For deployment, use a WSGI server pointed at `flaskapi:app` or
+`flaskapi:create_app()` and route `/api` to Flask on the frontend's origin. If
+Flask uses a different origin or port, set `VITE_API_BASE_URL` to its origin
+before starting or building the frontend and add the frontend's origin to the
+comma-separated `ALLOWED_ORIGINS` on the Flask side. Set `PORT` to change
+Flask's port. Export Flask variables in your shell before starting the server.
+
+## Connect the neural network
+
+The network on `will-branch-awesome` takes a financial sentence and returns a
+numeric `predictedSentiment`. After bringing that code over, expose inference
+with the trained model and its fitted vectorizer loaded once. The script
+currently trains and runs a demo at import time, so keep that workflow behind a
+main guard before importing model code from Flask.
+
+In `get_market_sentiment(ticker)`, obtain financial text for the requested
+ticker and run inference on it. Convert the resulting score or an aggregate of
+scores to a display string such as `"Sentiment score +0.24"` and return it.
+Return `None` if there is no relevant text. The analysis page displays the
+string as soon as the provider returns it. Keep `get_ai_projection(ticker)`
+for a separate forecasting provider that can supply a written projection.
 
 ## Check the API
 

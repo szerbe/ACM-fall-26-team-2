@@ -3,7 +3,7 @@
 import unittest
 from unittest.mock import patch
 
-from app import create_app
+from flaskapi import create_app
 
 
 class StockAPITests(unittest.TestCase):
@@ -26,9 +26,9 @@ class StockAPITests(unittest.TestCase):
         })
 
     def test_connected_providers_receive_normalized_ticker(self):
-        with patch("app.get_stock_price", return_value=123.45) as price, \
-             patch("app.get_market_sentiment", return_value="Bullish") as sentiment, \
-             patch("app.get_ai_projection", return_value="Potential growth.") as projection:
+        with patch("flaskapi.get_stock_price", return_value=123.45) as price, \
+             patch("flaskapi.get_market_sentiment", return_value="Bullish") as sentiment, \
+             patch("flaskapi.get_ai_projection", return_value="Potential growth.") as projection:
             response = self.client.get("/api/stocks/%20brk.b%20")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, {
@@ -40,7 +40,7 @@ class StockAPITests(unittest.TestCase):
             provider.assert_called_once_with("BRK.B")
 
     def test_invalid_tickers_do_not_call_providers(self):
-        with patch("app.get_stock_price") as price:
+        with patch("flaskapi.get_stock_price") as price:
             for ticker in ("bad!", "-AAPL", "A" * 21, "%20"):
                 with self.subTest(ticker=ticker):
                     response = self.client.get(f"/api/stocks/{ticker}")
@@ -49,8 +49,8 @@ class StockAPITests(unittest.TestCase):
         price.assert_not_called()
 
     def test_provider_failure_preserves_other_fields_and_hides_details(self):
-        with patch("app.get_stock_price", side_effect=RuntimeError("secret-token")), \
-             patch("app.get_market_sentiment", return_value="Neutral"), \
+        with patch("flaskapi.get_stock_price", side_effect=RuntimeError("secret-token")), \
+             patch("flaskapi.get_market_sentiment", return_value="Neutral"), \
              self.assertLogs(self.app.logger, level="ERROR"):
             response = self.client.get("/api/stocks/AAPL")
         self.assertEqual(response.status_code, 200)
@@ -60,9 +60,9 @@ class StockAPITests(unittest.TestCase):
         self.assertNotIn("secret-token", response.get_data(as_text=True))
 
     def test_all_provider_failures_return_502(self):
-        with patch("app.get_stock_price", side_effect=RuntimeError()), \
-             patch("app.get_market_sentiment", side_effect=RuntimeError()), \
-             patch("app.get_ai_projection", side_effect=RuntimeError()), \
+        with patch("flaskapi.get_stock_price", side_effect=RuntimeError()), \
+             patch("flaskapi.get_market_sentiment", side_effect=RuntimeError()), \
+             patch("flaskapi.get_ai_projection", side_effect=RuntimeError()), \
              self.assertLogs(self.app.logger, level="ERROR"):
             response = self.client.get("/api/stocks/AAPL")
         self.assertEqual(response.status_code, 502)
@@ -71,9 +71,9 @@ class StockAPITests(unittest.TestCase):
     def test_invalid_provider_values_become_errors(self):
         for value in (float("nan"), float("inf"), -1, True, "123.45"):
             with self.subTest(value=value), \
-                 patch("app.get_stock_price", return_value=value), \
-                 patch("app.get_market_sentiment", return_value={"label": "Bullish"}), \
-                 patch("app.get_ai_projection", return_value=["Growth"]), \
+                 patch("flaskapi.get_stock_price", return_value=value), \
+                 patch("flaskapi.get_market_sentiment", return_value={"label": "Bullish"}), \
+                 patch("flaskapi.get_ai_projection", return_value=["Growth"]), \
                  self.assertLogs(self.app.logger, level="ERROR"):
                 response = self.client.get("/api/stocks/AAPL")
                 self.assertEqual(response.status_code, 502)
