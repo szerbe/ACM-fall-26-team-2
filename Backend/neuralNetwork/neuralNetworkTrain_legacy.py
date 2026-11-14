@@ -1,3 +1,5 @@
+# DO NOT RUN THIS FILE ON THE FRONTEND UNLESS WE PLAN TO MAKE THE NN BETTER, THIS FILE RETAINS THE NETWORK AND OUTPUTS A FILE EVERY TIME IT IS RUN. WHY AM I YELLING? AAAAAAAAA
+
 import re
 import numpy as np
 import pandas as pd
@@ -6,22 +8,22 @@ from datasets import load_dataset
 from tensorflow.keras.layers import TextVectorization, Embedding, Bidirectional, LSTM, Dense, Dropout, Input
 from tensorflow.keras.models import Model
 
+# parse the string for stock tickers
+def extract_ticker(sentence):
+    # scan for a cashtag (like $AAPL)
+    cashtags = re.findall(r"\$([A-Z]{1,5})\b", sentence.upper())
+    if cashtags:
+        return cashtags[0]   
+    # just in case theres no cashtags search for patterns of uppercase letters
+    words = re.findall(r"\b([A-Z]{2,5})\b", sentence)
+    if words:
+        return words[0]
+    return "unknown ticker"
+
 def main():
     # load the dataset yo
     dataset = load_dataset("pauri32/fiqa-2018", split="train")
     df = pd.DataFrame(dataset)
-
-    # parse the string for stock tickers
-    def extract_ticker(sentence):
-        # scan for a cashtag (like $AAPL)
-        cashtags = re.findall(r"\$([A-Z]{1,5})\b", sentence.upper())
-        if cashtags:
-            return cashtags[0]   
-        # just in case theres no cashtags search for patterns of uppercase letters
-        words = re.findall(r"\b([A-Z]{2,5})\b", sentence)
-        if words:
-            return words[0]
-        return "unknown ticker"
 
     # establishes parsed target column
     df["parsed_target"] = df["sentence"].apply(extract_ticker)
@@ -53,19 +55,17 @@ def main():
         # input layer
         inputs = Input(shape=(MAXSEQUENCELENGTH,), dtype=tf.int64)
 
-        # please dont ask me how this part works I really dont know 
-
-        # Embedding maps token IDs to meaningful continuous vector spaces
+        # embedding layer
         x = Embedding(input_dim=MAXVOCABSIZE, output_dim=128, mask_zero=True)(inputs)
         
-        # Bidirectional LSTM to process context forward and backward
+        # bidirectional LSTM so that more context can be gainainededs (I am losing my mind)
         x = Bidirectional(LSTM(64, return_sequences=False))(x)
         x = Dropout(0.3)(x)
         
-        # Dense reasoning layers
+        # dense layers for that extra reasoning sauce
         x = Dense(32, activation="relu")(x)
         
-        # Output layer uses linear activation because sentiment_score is continuous (-1 to 1)
+        # output layer of sentiment score from -1 to 1
         outputs = Dense(1, activation="linear", name="sentiment_output")(x)
         
         model = Model(inputs=inputs, outputs=outputs)
@@ -74,7 +74,6 @@ def main():
     model = build_sentiment_model()
     model.compile(optimizer="adam", loss="mse", metrics=["mae"])
     model.summary()
-
 
     # train the neural network
     history = model.fit(xText, ySentiment, epochs=5, batch_size=30, validation_split=0.2)
@@ -96,5 +95,6 @@ def main():
         insight = predict_financial_insight(inputText)
         print(insight)
 
-    input("$TSLA hits an unexpected macro speedbump following delivery numbers, down 4% pre-market.")
+    input("Nvidia CEO Huang resigns, effective immediately; CFO Kress takes over")
+    model.save("sentiment_score_NN.keras")
 main()
