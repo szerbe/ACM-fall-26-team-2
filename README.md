@@ -13,10 +13,13 @@ Frontend
  - ReactJS
  - HTML
  - CSS
+   
 Backend
  - Python
+   
 Datasets/packages
 - huggingface
 - ALPACA API
+  
 APIs
  - FastAPI
