@@ -1,4 +1,5 @@
 **Stock Sentiment Web-app**
+
 This is a stock sentiment analyzer website using a neural network.
 
 **Guide**
